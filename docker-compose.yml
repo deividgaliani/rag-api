@@ -1,0 +1,17 @@
+services:
+  # Base Vetorial
+  vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: rag-vector-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vector_store
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
