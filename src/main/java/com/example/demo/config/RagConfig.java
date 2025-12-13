@@ -9,9 +9,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
+import java.util.List;
 
 @Configuration
+@Slf4j
 public class RagConfig {
 
     @Value("${rag.ollama.base-url}")
@@ -52,22 +55,47 @@ public class RagConfig {
 
     @Bean
     dev.langchain4j.model.chat.ChatLanguageModel chatLanguageModel() {
-        return dev.langchain4j.model.ollama.OllamaChatModel.builder()
+        dev.langchain4j.model.chat.ChatLanguageModel model = dev.langchain4j.model.ollama.OllamaChatModel.builder()
                 .baseUrl(ollamaBaseUrl)
                 .modelName(ollamaChatModelName)
                 .timeout(ollamaTimeout)
                 .build();
+
+        return (dev.langchain4j.model.chat.ChatLanguageModel) java.lang.reflect.Proxy.newProxyInstance(
+                model.getClass().getClassLoader(),
+                new Class[] { dev.langchain4j.model.chat.ChatLanguageModel.class },
+                (proxy, method, args) -> {
+                    if ("generate".equals(method.getName()) && args != null && args.length > 0) {
+                        log.info("Invoking ChatModel: {}", method.getName());
+                        for (Object arg : args) {
+                            log.info("Argument: {}", arg);
+                        }
+                    }
+                    try {
+                        return method.invoke(model, args);
+                    } catch (java.lang.reflect.InvocationTargetException e) {
+                        throw e.getTargetException();
+                    }
+                });
     }
 
     @Bean
     dev.langchain4j.rag.content.retriever.ContentRetriever contentRetriever(EmbeddingStore<TextSegment> embeddingStore,
             EmbeddingModel embeddingModel) {
-        return dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever.builder()
+        dev.langchain4j.rag.content.retriever.ContentRetriever retriever = dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever
+                .builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
                 .maxResults(3)
                 .minScore(0.7)
                 .build();
+
+        return query -> {
+            log.info("Retrieving content for query: {}", query.text());
+            List<dev.langchain4j.rag.content.Content> contents = retriever.retrieve(query);
+            contents.forEach(content -> log.info("Retrieved content segment: {}", content.textSegment().text()));
+            return contents;
+        };
     }
 
     @Bean
