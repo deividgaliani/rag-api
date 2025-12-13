@@ -7,7 +7,8 @@ CREATE TABLE vector_store (
     embedding_id UUID PRIMARY KEY,
     embedding vector(768),
     text TEXT,
-    metadata JSONB
+    metadata JSONB,
+    sequence INTEGER
 );
 
 CREATE INDEX ON vector_store USING HNSW (embedding vector_cosine_ops);
