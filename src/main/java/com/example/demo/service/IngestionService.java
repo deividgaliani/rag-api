@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
+import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -38,7 +39,7 @@ public class IngestionService {
         Path path = Paths.get(directoryPath);
         log.info("Starting ingestion from directory: {}", path.toAbsolutePath());
         try {
-            var documents = FileSystemDocumentLoader.loadDocuments(path);
+            var documents = FileSystemDocumentLoader.loadDocuments(path, new ApachePdfBoxDocumentParser());
             log.info("Loaded {} documents from {}", documents.size(), path);
 
             var sanitizedDocuments = documents.stream()
@@ -65,7 +66,7 @@ public class IngestionService {
             Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
             log.info("Saved upload to temp file: {}", tempFile);
 
-            Document document = FileSystemDocumentLoader.loadDocument(tempFile);
+            Document document = FileSystemDocumentLoader.loadDocument(tempFile, new ApachePdfBoxDocumentParser());
 
             // Postgres text cannot contain null bytes (0x00)
             String sanitizedText = document.text() == null ? "" : document.text().replace("\u0000", "");
