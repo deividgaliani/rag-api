@@ -30,4 +30,16 @@ public class RagController implements RagControllerApi {
         log.info("Generated answer: {}", answer);
         return ResponseEntity.ok(new ChatResponse(answer));
     }
+
+    @Override
+    public void insertPdf(org.springframework.web.multipart.MultipartFile file) {
+        log.info("Received request to ingest PDF: {}", file.getOriginalFilename());
+        try {
+            ingestionService.ingestPdf(file);
+        } catch (Exception e) {
+            log.error("Error processing PDF", e);
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "Error processing PDF", e);
+        }
+    }
 }

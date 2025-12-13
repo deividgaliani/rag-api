@@ -12,6 +12,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import dev.langchain4j.data.document.Document;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +56,28 @@ public class IngestionService {
         } catch (Exception e) {
             log.error("Error during ingestion", e);
             throw e;
+        }
+    }
+
+    public void ingestPdf(MultipartFile file) {
+        try {
+            Path tempFile = Files.createTempFile("ingestion-", file.getOriginalFilename());
+            Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Saved upload to temp file: {}", tempFile);
+
+            Document document = FileSystemDocumentLoader.loadDocument(tempFile);
+
+            // Postgres text cannot contain null bytes (0x00)
+            String sanitizedText = document.text() == null ? "" : document.text().replace("\u0000", "");
+            Document sanitizedDocument = Document.from(sanitizedText, document.metadata());
+
+            this.ingestor.ingest(Collections.singletonList(sanitizedDocument));
+            log.info("Ingestion of file {} completed successfully.", file.getOriginalFilename());
+
+            Files.deleteIfExists(tempFile);
+        } catch (IOException e) {
+            log.error("Error during single file ingestion", e);
+            throw new RuntimeException("Failed to ingest file", e);
         }
     }
 }
