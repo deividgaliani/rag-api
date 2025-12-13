@@ -11,7 +11,11 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import dev.langchain4j.data.document.Document;
+import java.util.stream.Collectors;
+
 @Service
+@lombok.extern.slf4j.Slf4j
 public class IngestionService {
 
     private final EmbeddingStoreIngestor ingestor;
@@ -26,6 +30,26 @@ public class IngestionService {
 
     public void ingestDocs(String directoryPath) {
         Path path = Paths.get(directoryPath);
-        this.ingestor.ingest(FileSystemDocumentLoader.loadDocuments(path));
+        log.info("Starting ingestion from directory: {}", path.toAbsolutePath());
+        try {
+            var documents = FileSystemDocumentLoader.loadDocuments(path);
+            log.info("Loaded {} documents from {}", documents.size(), path);
+
+            var sanitizedDocuments = documents.stream()
+                    .map(doc -> {
+                        if (doc.text() == null)
+                            return doc;
+                        // Postgres text cannot contain null bytes (0x00)
+                        String sanitizedText = doc.text().replace("\u0000", "");
+                        return Document.from(sanitizedText, doc.metadata());
+                    })
+                    .collect(Collectors.toList());
+
+            this.ingestor.ingest(sanitizedDocuments);
+            log.info("Ingestion completed successfully.");
+        } catch (Exception e) {
+            log.error("Error during ingestion", e);
+            throw e;
+        }
     }
 }

@@ -38,12 +38,35 @@ public class RagConfig {
     @Value("${rag.pgvector.dimension}")
     private Integer vectorDimension;
 
+    @Value("${rag.ollama.chat-model}")
+    private String ollamaChatModelName;
+
     @Bean
     EmbeddingModel embeddingModel() {
         return OllamaEmbeddingModel.builder()
                 .baseUrl(ollamaBaseUrl)
                 .modelName(ollamaModelName)
                 .timeout(ollamaTimeout)
+                .build();
+    }
+
+    @Bean
+    dev.langchain4j.model.chat.ChatLanguageModel chatLanguageModel() {
+        return dev.langchain4j.model.ollama.OllamaChatModel.builder()
+                .baseUrl(ollamaBaseUrl)
+                .modelName(ollamaChatModelName)
+                .timeout(ollamaTimeout)
+                .build();
+    }
+
+    @Bean
+    dev.langchain4j.rag.content.retriever.ContentRetriever contentRetriever(EmbeddingStore<TextSegment> embeddingStore,
+            EmbeddingModel embeddingModel) {
+        return dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(embeddingStore)
+                .embeddingModel(embeddingModel)
+                .maxResults(3)
+                .minScore(0.7)
                 .build();
     }
 

@@ -6,11 +6,15 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
 
 rag:
   ollama:
     base-url: ${OLLAMA_BASE_URL}
     model-name: ${OLLAMA_MODEL_NAME}
+    chat-model: ${OLLAMA_CHAT_MODEL}
     timeout: 300s
   pgvector:
     dimension: 768
