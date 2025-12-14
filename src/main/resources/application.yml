@@ -28,3 +28,10 @@ rag:
   pgvector:
     dimension: 768
     table: vector_store
+  ingestion:
+    document-splitter:
+      max-segment-size-in-chars: ${MAX_SEGMENT_SIZE_IN_CHARS:2000}
+      max-overlap-size-in-chars: ${MAX_OVERLAP_SIZE_IN_CHARS:400}
+
+server:
+  port: ${SERVER_PORT:8081}

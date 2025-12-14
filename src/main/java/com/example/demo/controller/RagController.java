@@ -5,12 +5,13 @@ import com.example.demo.dto.ChatResponse;
 import com.example.demo.service.IngestionService;
 import com.example.demo.service.RagAiService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@lombok.extern.slf4j.Slf4j
+@Slf4j
 public class RagController implements RagControllerApi {
 
     private final IngestionService ingestionService;

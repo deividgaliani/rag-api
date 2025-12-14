@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
@@ -7,29 +8,31 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import dev.langchain4j.data.document.Document;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Service
-@lombok.extern.slf4j.Slf4j
+@Slf4j
 public class IngestionService {
 
     private final EmbeddingStoreIngestor ingestor;
 
-    public IngestionService(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore) {
+    public IngestionService(EmbeddingModel embeddingModel,
+            EmbeddingStore<TextSegment> embeddingStore,
+            @Value("${rag.ingestion.document-splitter.max-segment-size-in-chars}") int maxSegmentSizeInChars,
+            @Value("${rag.ingestion.document-splitter.max-overlap-size-in-chars}") int maxOverlapSizeInChars) {
         this.ingestor = EmbeddingStoreIngestor.builder()
-                .documentSplitter(DocumentSplitters.recursive(300, 20))
+                .documentSplitter(DocumentSplitters.recursive(maxSegmentSizeInChars, maxOverlapSizeInChars))
                 .embeddingModel(embeddingModel)
                 .embeddingStore(embeddingStore)
                 .build();

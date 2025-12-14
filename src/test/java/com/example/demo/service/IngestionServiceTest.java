@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -28,12 +29,14 @@ class IngestionServiceTest {
     private EmbeddingModel embeddingModel;
     private EmbeddingStore<TextSegment> embeddingStore;
     private IngestionService ingestionService;
+    private final int MAX_SEGMENT_SIZE = 300;
+    private final int MAX_OVERLAP_SIZE = 50;
 
     @BeforeEach
     void setUp() {
         embeddingModel = mock(EmbeddingModel.class);
         embeddingStore = mock(EmbeddingStore.class);
-        ingestionService = new IngestionService(embeddingModel, embeddingStore);
+        ingestionService = new IngestionService(embeddingModel, embeddingStore, MAX_SEGMENT_SIZE, MAX_OVERLAP_SIZE);
     }
 
     @Test
