@@ -85,6 +85,33 @@ A documentação interativa da API pode ser acessada através do Swagger UI:
 
 Se desejar rodar a aplicação via Docker, certifique-se de criar a imagem ou utilizar um Dockerfile apropriado (não incluído por padrão na raiz, mas configurável).
 
+## 🔄 Fluxo Completo de Recuperação (RAG)
+
+1.  **Entrada (`RagController`)**: O usuário envia um POST com a pergunta.
+2.  **Busca (`ContentRetriever`)**:
+    *   A pergunta vira um vetor (usando `nomic-embed-text`).
+    *   O sistema busca no PostgreSQL (`vector_store`) os 3 segmentos mais similares (score > 0.7).
+3.  **Prompt**: O LangChain4j monta um prompt com os segmentos recuperados + a pergunta do usuário.
+4.  **Geração (`ChatLanguageModel`)**: A LLM (`llama3.2`) gera a resposta usando o contexto.
+
+## ⚙️ Detalhamento das Configurações
+
+### 1. `application.yml` (Estrutura)
+Define os parâmetros de ingestão e conexão:
+*   `rag.ingestion.document-splitter`:
+    *   `max-segment-size`: Tamanho do pedaço de texto (ex: 2000 chars).
+    *   `max-overlap-size`: Repetição para manter contexto (ex: 400 chars).
+
+### 2. `.env` (Ambiente)
+Controla variáveis dinâmicas sem mexer no código:
+*   `OLLAMA_MODEL_NAME`: Modelo de Embedding (ex: `nomic-embed-text`).
+*   `OLLAMA_CHAT_MODEL`: Modelo de Chat (ex: `llama3.2`, `mistral`).
+
+### 3. `RagConfig.java` (Comportamento)
+Define regras de negócio do RAG:
+*   `maxResults(3)`: Quantidade de trechos de documentos a enviar para a IA.
+*   `minScore(0.7)`: Filtragem de relevância (0.0 a 1.0).
+
 ## 📝 Notas
 
 - O modelo de embedding configurado deve estar disponível no seu servidor Ollama (ex: `ollama pull nomic-embed-text`).

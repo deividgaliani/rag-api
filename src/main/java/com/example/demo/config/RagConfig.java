@@ -44,6 +44,12 @@ public class RagConfig {
     @Value("${rag.ollama.chat-model}")
     private String ollamaChatModelName;
 
+    @Value("${rag.retriever.max-results}")
+    private Integer maxResults;
+
+    @Value("${rag.retriever.min-score}")
+    private Double minScore;
+
     @Bean
     EmbeddingModel embeddingModel() {
         return OllamaEmbeddingModel.builder()
@@ -86,8 +92,8 @@ public class RagConfig {
                 .builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
-                .maxResults(3)
-                .minScore(0.7)
+                .maxResults(maxResults)
+                .minScore(minScore)
                 .build();
 
         return query -> {

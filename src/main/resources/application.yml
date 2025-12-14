@@ -1,4 +1,7 @@
 spring:
+  output:
+    ansi:
+      enabled: always
   application:
     name: rag-api
   datasource:
@@ -15,6 +18,8 @@ spring:
       max-request-size: 50MB
 
 logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
   level:
     dev:
       langchain4j: DEBUG
@@ -32,6 +37,9 @@ rag:
     document-splitter:
       max-segment-size-in-chars: ${MAX_SEGMENT_SIZE_IN_CHARS:2000}
       max-overlap-size-in-chars: ${MAX_OVERLAP_SIZE_IN_CHARS:400}
+  retriever:
+    max-results: ${RAG_MAX_RESULTS:3}
+    min-score: ${RAG_MIN_SCORE:0.7}
 
 server:
-  port: ${SERVER_PORT:8081}
+  port: ${SERVER_PORT:8080}
